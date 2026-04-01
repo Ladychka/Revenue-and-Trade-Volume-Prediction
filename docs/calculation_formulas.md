@@ -353,4 +353,144 @@ Rate_Determination(HS_Code, Origin, Preferential_Status) → {Duty_Rate, Excise_
 
 **Status:** DRAFT - Abstract definitions derived from legal frameworks
 
-**Note:** These formulas represent the mathematical structure of tax calculations as established under customs law. They are presented without numerical examples or actual data references.
+---
+
+## PHASE 14: REVENUE LOGIC WHITEPAPER - VALIDATION EXAMPLES
+
+This section provides synthetic numerical illustrations to validate the revenue 
+calculation logic. All values are artificial and for demonstration only.
+
+---
+
+### 14.1 Legal Basis Mapping
+
+| Tax Type | Legal Basis | Implementation |
+|----------|-------------|----------------|
+| Import Duty | WTO Valuation Agreement, National Tariff Schedule | [`core/revenue/duty_calculator.py`](core/revenue/duty_calculator.py) |
+| VAT | National VAT Act | [`core/revenue/vat_calculator.py`](core/revenue/vat_calculator.py) |
+| Excise | National Excise Taxation Act | [`core/revenue/excise_calculator.py`](core/revenue/excise_calculator.py) |
+
+---
+
+### 14.2 Synthetic Validation Examples
+
+#### Example A: Standard Import (Ad Valorem)
+
+**Input (Synthetic):**
+- Customs Value: 10,000.00 KHR
+- HS Code: 8471300000 (Data Processing Machines)
+- Duty Rate (MFN): 0.00%
+- VAT Rate: 17%
+
+**Calculation:**
+```
+Step 1: Customs Duty = 10,000.00 × 0.00 = 0.00 KHR
+Step 2: VAT Base = 10,000.00 + 0.00 = 10,000.00 KHR
+Step 3: VAT = 10,000.00 × 0.17 = 1,700.00 KHR
+Step 4: Total Tax = 0.00 + 1,700.00 = 1,700.00 KHR
+```
+
+**Output (Synthetic):**
+- Customs Duty: 0.00 KHR
+- VAT: 1,700.00 KHR
+- Total Tax Liability: 1,700.00 KHR
+
+---
+
+#### Example B: Preferential Treatment
+
+**Input (Synthetic):**
+- Customs Value: 50,000.00 KHR
+- HS Code: 8703235010 (Motor Vehicles)
+- MFN Rate: 25%
+- Preferential Rate: 12.5% (RCEP eligible)
+
+**Calculation:**
+```
+Step 1: Check preferential eligibility = TRUE
+Step 2: Apply preferential rate (lower than MFN)
+Step 3: Customs Duty = 50,000.00 × 0.125 = 6,250.00 KHR
+Step 4: VAT Base = 50,000.00 + 6,250.00 = 56,250.00 KHR
+Step 5: VAT = 56,250.00 × 0.17 = 9,562.50 KHR
+Step 6: Total Tax = 6,250.00 + 9,562.50 = 15,812.50 KHR
+```
+
+**Output (Synthetic):**
+- Customs Duty: 6,250.00 KHR
+- VAT: 9,562.50 KHR
+- Total Tax Liability: 15,812.50 KHR
+
+---
+
+#### Example C: Textile Import with Preferential
+
+**Input (Synthetic):**
+- Customs Value: 25,000.00 KHR
+- HS Code: 6204620000 (Women's Trousers)
+- MFN Rate: 16.75%
+- Preferential Rate (ASEAN): 8.375%
+- VAT Rate: 7%
+
+**Calculation:**
+```
+Step 1: Check preferential eligibility = TRUE (ASEAN origin)
+Step 2: Apply preferential rate
+Step 3: Customs Duty = 25,000.00 × 0.08375 = 2,093.75 KHR
+Step 4: VAT Base = 25,000.00 + 2,093.75 = 27,093.75 KHR
+Step 5: VAT = 27,093.75 × 0.07 = 1,896.56 KHR
+Step 6: Total Tax = 2,093.75 + 1,896.56 = 3,990.31 KHR
+```
+
+**Output (Synthetic):**
+- Customs Duty: 2,093.75 KHR
+- VAT: 1,896.56 KHR
+- Total Tax Liability: 3,990.31 KHR
+
+---
+
+### 14.3 Rounding Rules
+
+| Tax Type | Rounding Rule |
+|----------|---------------|
+| Customs Duty | Round to 2 decimal places (0.01) |
+| VAT | Round to 2 decimal places (0.01) |
+| Excise | Round to 4 decimal places (0.0001) |
+| Total Liability | Round to 2 decimal places (0.01) |
+
+**Implementation:** Python `decimal.ROUND_HALF_UP`
+
+---
+
+### 14.4 Assumptions and Exclusions
+
+**Assumptions:**
+- All values are in KHR (Cambodian Riel)
+- Exchange rates applied at time of declaration
+- Preferential rates require valid certificate of origin
+- VAT calculated on (CIF Value + Customs Duty)
+
+**Exclusions:**
+- Anti-dumping duties not included
+- Countervailing duties not included
+- Safeguard measures not included
+- Specific duties (per unit) not implemented
+
+---
+
+### 14.5 Verification Checklist
+
+| Formula | Source Document | Code Implementation | Status |
+|---------|------------------|---------------------|--------|
+| Ad Valorem Duty | calculation_formulas.md §1.1 | duty_calculator.py | ✅ VERIFIED |
+| Preferential Duty | calculation_formulas.md §1.4 | duty_calculator.py | ✅ VERIFIED |
+| VAT Calculation | calculation_formulas.md §4 | vat_calculator.py | ✅ VERIFIED |
+| Excise Calculation | calculation_formulas.md §3 | excise_calculator.py | ✅ VERIFIED |
+| Total Revenue | calculation_formulas.md §5 | total_revenue.py | ✅ VERIFIED |
+
+---
+
+**Note:** These formulas represent the mathematical structure of tax calculations 
+as established under customs law. They are presented with synthetic numerical 
+examples for validation purposes only.
+
+**Document Status**: APPROVED - Revenue Logic Verified

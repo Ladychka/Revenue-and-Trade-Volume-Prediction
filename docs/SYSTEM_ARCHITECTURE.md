@@ -226,8 +226,65 @@
 ✅ Phase 8  - API (Read-Only, Safe)
 ✅ Phase 9  - Dashboards & Reports
 ✅ Phase 10 - Privacy Audit
+✅ Phase 11 - System Freeze & Baseline Control
+✅ Phase 12 - Architecture Documentation
 
 CLASSIFICATION: Non-Production - 100% Synthetic Data
+
+---
+
+## 12.1 High-Level System Architecture
+
+The Customs Revenue Analytics Platform is a demonstration system that provides aggregated 
+analytics on customs revenue and trade volume. All data is synthetic - no real trade 
+information is stored or processed.
+
+### Data Flow
+
+```
+SYNTHETIC DATA → ETL → DATABASE → AGGREGATION → API → DASHBOARD
+```
+
+### What This System Does
+
+1. **Generates** synthetic customs declarations, payments, and trade data
+2. **Calculates** duty, VAT, and excise taxes based on HS codes
+3. **Aggregates** trade and revenue by country, port, and time period
+4. **Serves** aggregated data through read-only APIs
+5. **Displays** analytics in Power BI dashboards
+
+### What This System Cannot Do
+
+- ❌ Cannot access real customs declarations
+- ❌ Cannot identify real importers or traders
+- ❌ Cannot process actual payment transactions
+- ❌ Cannot connect to government systems
+- ❌ Cannot generate official tax documents
+
+---
+
+## 12.2 Component Descriptions
+
+| Layer | Component | Responsibility | Limitation |
+|-------|-----------|----------------|------------|
+| Data Generation | generate_synthetic_data.py | Create fake declarations/payments | Cannot access real data |
+| Database | PostgreSQL | Store and query data | Cannot store PII |
+| Core Logic | revenue/*, trade/* | Tax calculations, aggregations | Cannot process real taxes |
+| API | FastAPI | Serve aggregated data | Cannot modify data |
+| Visualization | Power BI | Display dashboards | Cannot drill-down |
+
+---
+
+## 12.3 Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Database | PostgreSQL | Store synthetic data & views |
+| ETL | Python scripts | Generate & load data |
+| Core Logic | Python | Tax calculations |
+| API | FastAPI | Read-only REST endpoints |
+| Visualization | Power BI | Dashboards |
+| Orchestration | Docker Compose | Container management |
 APPROVED FOR:   Demo / Portfolio / Proposal Use
 
 
@@ -242,4 +299,9 @@ Status:    COMPLETE
 Repository: https://github.com/Ladychka/Revenue-and-Trade-Volume-Prediction
 
 
-==================================================================
+==================================================================  
+  
+==================================================================  
+PHASE 12 - ARCHITECTURE DOCUMENTATION  
+==================================================================  
+ 
