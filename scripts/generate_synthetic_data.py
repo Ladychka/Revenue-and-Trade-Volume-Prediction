@@ -70,7 +70,7 @@ STATUSES = [
     ('CLEARED', 0.85), ('PROCESSED', 0.10), ('LODGED', 0.04), ('REJECTED', 0.01),
 ]
 
-# Currencies
+# Currencies (original declaration currency)
 CURRENCIES = ['USD', 'EUR', 'JPY', 'CNY', 'GBP', 'THB', 'KRW']
 
 def weighted_choice(choices: List[Tuple]) -> str:
