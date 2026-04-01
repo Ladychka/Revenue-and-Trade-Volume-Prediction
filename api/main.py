@@ -35,8 +35,11 @@ app = FastAPI(
     - No individual declaration or importer identifiers exposed
     - Minimum threshold: 5 records per aggregation
     - All API access is logged
+    
+    **API Freeze Status:** v1.0-demo - ENDPOINT CONTRACTS FROZEN
+    No new endpoints can be added without governance approval.
     """,
-    version="1.0.0",
+    version="1.0.0-demo",
     docs_url="/docs",
     redoc_url="/redoc"
 )

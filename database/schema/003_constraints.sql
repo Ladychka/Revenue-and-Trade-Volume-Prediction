@@ -147,3 +147,46 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
 -- ============================================================================
 -- End of Constraints
 -- ============================================================================
+
+-- ============================================================================
+-- PHASE 11: SYSTEM FREEZE - READ-ONLY RESTRICTIONS
+-- Freeze Date: 2026-04-01
+-- Purpose: Lock schema to prevent modifications (DEMO VERSION)
+-- ============================================================================
+
+-- Create read-only role for demo access
+DO $
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'demo_readonly') THEN
+        CREATE ROLE demo_readonly;
+    END IF;
+END
+$;
+
+-- Grant read-only access to tables (SELECT only)
+GRANT SELECT ON declarations TO demo_readonly;
+GRANT SELECT ON declaration_items TO demo_readonly;
+GRANT SELECT ON payments TO demo_readonly;
+GRANT SELECT ON exchange_rates TO demo_readonly;
+GRANT SELECT ON hs_code_reference TO demo_readonly;
+GRANT SELECT ON port_reference TO demo_readonly;
+GRANT SELECT ON country_reference TO demo_readonly;
+GRANT SELECT ON currency_reference TO demo_readonly;
+
+-- Grant read-only access to materialized views
+GRANT SELECT ON mv_monthly_revenue TO demo_readonly;
+GRANT SELECT ON mv_trade_by_country TO demo_readonly;
+GRANT SELECT ON mv_trade_by_hs TO demo_readonly;
+
+-- Grant execute on refresh function
+GRANT EXECUTE ON FUNCTION refresh_all_materialized_views() TO demo_readonly;
+
+-- REVOKE write permissions from demo role
+REVOKE INSERT, UPDATE, DELETE ON declarations FROM demo_readonly;
+REVOKE INSERT, UPDATE, DELETE ON declaration_items FROM demo_readonly;
+REVOKE INSERT, UPDATE, DELETE ON payments FROM demo_readonly;
+REVOKE INSERT, UPDATE, DELETE ON exchange_rates FROM demo_readonly;
+
+-- ============================================================================
+-- END OF SYSTEM FREEZE CONSTRAINTS
+-- ============================================================================

@@ -1,0 +1,32 @@
+# Constants for Customs Revenue Analytics
+
+# Currency codes
+KHR = "KHR"
+USD = "USD"
+EUR = "EUR"
+
+# Declaration status
+STATUS_CLEARED = "CLEARED"
+STATUS_PROCESSED = "PROCESSED"
+STATUS_REJECTED = "REJECTED"
+STATUS_LODGED = "LODGED"
+
+# Tax types
+TAX_TYPE_DUTY = "CUSTOMS_DUTY"
+TAX_TYPE_VAT = "VAT"
+TAX_TYPE_EXCISE = "EXCISE"
+
+# Default rates (for synthetic data)
+DEFAULT_DUTY_RATE = 0.10  # 10%
+DEFAULT_VAT_RATE = 0.17   # 17%
+DEFAULT_EXCISE_RATE = 0.0 # 0%
+
+# HS code chapters
+MACHINERY_CHAPTERS = ["84", "85"]
+TEXTILES_CHAPTERS = ["61", "62", "63"]
+VEHICLES_CHAPTERS = ["87"]
+CHEMICALS_CHAPTERS = ["28", "29", "30", "31", "32"]
+
+# Privacy thresholds
+MIN_AGGREGATION_RECORDS = 5
+MAX_TOP_RESULTS = 20
