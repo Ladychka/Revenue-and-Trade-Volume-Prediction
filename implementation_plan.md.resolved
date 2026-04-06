@@ -1,0 +1,448 @@
+# Version 2.0 — Implementation Plan
+## Customs Revenue & Trade Volume Prediction Analytics Platform
+
+---
+
+## Goal
+
+Evolve the V1 portfolio demo into a **functional, intelligent analytics platform** that can:
+1. **Predict** revenue and trade trends using ML models
+2. **Interact** via natural language queries (chat-based analytics)
+3. **Simulate** policy scenarios with real calculations
+4. **Scale** with production-grade infrastructure
+5. **Visualize** with a live web dashboard (replacing static Power BI)
+
+> [!IMPORTANT]
+> **V1 remains frozen.** V2 lives in a new directory (`customs-analytics-v2/`) under the same repo, inheriting architecture patterns but operating independently. V1 is the "before", V2 is the "after" — a compelling progression for any portfolio review.
+
+---
+
+## User Review Required
+
+> [!WARNING]
+> **Key Decisions Needed Before Building:**
+> 1. **Scope:** Should we build all 5 phases, or start with a specific subset (e.g., just forecasting + web dashboard)?
+> 2. **Web Framework:** Next.js (React) for the dashboard, or keep it simple with a single-page Vite app?
+> 3. **ML Depth:** Simple statistical models (moving average, ARIMA) or also include Prophet/scikit-learn?
+> 4. **LLM Integration:** Do you want a chat interface that queries the data via natural language? If yes, which LLM provider to target?
+> 5. **Location:** Build V2 in `e:\Revenue_TradeVolumePrediction\bold\customs-analytics-v2/` as a sibling to the V1 project, or as a subdirectory in V1?
+
+---
+
+## What Changes from V1 → V2
+
+| Dimension | V1 (Frozen) | V2 (New) |
+|-----------|-------------|----------|
+| **Purpose** | Portfolio demo | Functional analytics tool |
+| **Data** | Static 50K synthetic records | 500K+ with seasonal patterns |
+| **API** | 13 GET-only endpoints | 30+ endpoints (REST + WebSocket) |
+| **Frontend** | Power BI (static) | Live web dashboard (React/Vite) |
+| **ML/AI** | None | Revenue forecasting, anomaly detection |
+| **Chat** | None | NLP query interface |
+| **Scenarios** | Documented only | Interactive simulation engine |
+| **Excise Tax** | Stub (returns 0) | Full implementation |
+| **Auth** | None | API key + role-based access |
+| **Deployment** | docker-compose (empty) | Working docker-compose + CI |
+| **Tests** | Empty directories | Actual pytest test suite |
+
+---
+
+## Proposed Changes
+
+### Phase 1 — Foundation & Working Infrastructure
+*Estimated: 2-3 days*
+
+> Get a real, runnable system — the biggest gap in V1 is that it has structure but many files are stubs.
+
+---
+
+#### [NEW] `customs-analytics-v2/` — New project root
+
+Create the V2 project directory as a sibling to the V1 project.
+
+#### [NEW] `requirements.txt`
+
+```
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+sqlalchemy==2.0.*
+psycopg2-binary==2.9.*
+pandas==2.2.*
+numpy==2.0.*
+pydantic==2.10.*
+python-dotenv==1.1.*
+httpx==0.28.*
+pytest==8.3.*
+```
+
+#### [NEW] `docker-compose.yml` — Actually working
+
+```yaml
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: customs_analytics
+      POSTGRES_USER: customs_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+
+  api:
+    build: .
+    ports: ["8000:8000"]
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgresql://customs_user:${DB_PASSWORD}@db:5432/customs_analytics
+
+  dashboard:
+    build: ./dashboard
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  pgdata:
+```
+
+#### [MODIFY] `scripts/generate_synthetic_data.py` → V2 version
+
+- Scale from 50K to **500K declarations**
+- Add **seasonal patterns** (Q4 spike, Lunar New Year dip)
+- Add **realistic excise data** (fuel, alcohol, tobacco HS codes)
+- Add **anomaly injection** (5% of records with suspicious patterns for ML training)
+- Add **5-year date range** (2021-2025) for better trend analysis
+
+#### [NEW] `database/schema/001_core_tables.sql` — Real executable DDL
+
+Full CREATE TABLE statements with constraints, indexes, and comments.
+
+#### [NEW] `database/schema/002_reference_tables.sql`
+
+Expanded reference data (50+ HS codes, 30+ countries, 20+ ports).
+
+#### [NEW] `database/schema/003_views.sql` + `004_materialized_views.sql`
+
+Working SQL views that power the API.
+
+#### [MODIFY] `api/main.py` — Connected to real PostgreSQL
+
+Replace stub responses with actual SQLAlchemy queries against the database.
+
+#### [NEW] `api/database.py` — SQLAlchemy engine + session management
+
+#### [NEW] `Dockerfile` — API container
+
+---
+
+### Phase 2 — Revenue Forecasting & Anomaly Detection
+*Estimated: 2-3 days*
+
+> The headline feature: make the platform **predictive**, not just descriptive.
+
+---
+
+#### [NEW] `core/forecasting/revenue_forecast.py`
+
+Three forecasting models, simplest to most capable:
+
+```python
+# Model 1: Simple Moving Average (baseline)
+def moving_average_forecast(monthly_data, window=3, periods=6)
+
+# Model 2: Exponential Smoothing (Holt-Winters)
+def exponential_smoothing_forecast(monthly_data, periods=6)
+
+# Model 3: SARIMA (seasonal ARIMA)
+def sarima_forecast(monthly_data, periods=6)
+```
+
+**New API Endpoints:**
+```
+GET /api/v2/forecast/revenue             → 6-month revenue prediction
+GET /api/v2/forecast/revenue/by-tax-type → Breakdown by duty/VAT/excise
+GET /api/v2/forecast/models/compare      → Compare model accuracy (MAE, RMSE)
+```
+
+#### [NEW] `core/forecasting/trade_forecast.py`
+
+```python
+def forecast_trade_by_country(country_code, periods=6)
+def forecast_trade_by_hs(hs_chapter, periods=6)
+```
+
+**New API Endpoints:**
+```
+GET /api/v2/forecast/trade/by-country?country=CN  → Country-level forecast
+GET /api/v2/forecast/trade/by-hs?chapter=84       → Commodity forecast
+```
+
+#### [NEW] `core/compliance/anomaly_detection.py`
+
+```python
+# Z-Score based anomaly detection
+def detect_value_anomalies(declarations, threshold=3.0)
+
+# Isolation Forest for multivariate anomalies
+def detect_pattern_anomalies(declarations)
+
+# Statistical process control
+def detect_port_anomalies(port_metrics)
+```
+
+**New API Endpoints:**
+```
+GET /api/v2/compliance/anomalies           → Detected anomalies list
+GET /api/v2/compliance/anomaly-stats       → Summary statistics
+```
+
+#### [NEW] `core/revenue/excise_calculator_v2.py` — Full implementation
+
+Complete excise tax with:
+- Ad valorem excise (percentage of value)
+- Specific excise (per-unit: liters, kg)
+- Mixed excise (MAX of both methods)
+- HS codes: fuel (2710), alcohol (2203-2208), tobacco (2402)
+
+---
+
+### Phase 3 — Interactive Scenario Simulation
+*Estimated: 1-2 days*
+
+> Turn the static scenario walkthroughs from V1 docs into a **live calculation engine**.
+
+---
+
+#### [NEW] `core/scenarios/simulation_engine.py`
+
+```python
+class ScenarioEngine:
+    def simulate_tariff_change(self, hs_codes, new_rates) -> ScenarioResult
+    def simulate_fta_expansion(self, countries, pref_rate) -> ScenarioResult
+    def simulate_volume_change(self, country, pct_change) -> ScenarioResult
+    def compare(self, baseline, proposal) -> ComparisonResult
+```
+
+**New API Endpoints:**
+```
+POST /api/v2/scenarios/tariff-change      → "What if we change duty on HS 87 to 15%?"
+POST /api/v2/scenarios/fta-expansion      → "What if we add Vietnam to FTA?"
+POST /api/v2/scenarios/compare            → Side-by-side comparison
+GET  /api/v2/scenarios/presets            → Pre-built scenarios
+```
+
+> [!NOTE]
+> This is the first set of **POST endpoints** in the system. They don't write to the database — they perform calculations in memory and return results. The synthetic-only policy is maintained.
+
+---
+
+### Phase 4 — Live Web Dashboard
+*Estimated: 3-4 days*
+
+> Replace static Power BI mockups with a **real, interactive web dashboard**.
+
+---
+
+#### [NEW] `dashboard/` — Vite + React application
+
+```
+dashboard/
+├── src/
+│   ├── components/
+│   │   ├── Layout.jsx              # App shell, sidebar, header
+│   │   ├── KPICard.jsx             # Revenue/trade/risk KPI cards
+│   │   ├── RevenueChart.jsx        # Monthly revenue line chart
+│   │   ├── TradeByCountryChart.jsx # Horizontal bar chart
+│   │   ├── TradeByHSChart.jsx      # Treemap or donut chart
+│   │   ├── PortPerformance.jsx     # Port comparison chart
+│   │   ├── ForecastChart.jsx       # Forecast with confidence bands
+│   │   ├── AnomalyTable.jsx        # Detected anomalies list
+│   │   ├── ScenarioForm.jsx        # Interactive scenario builder
+│   │   └── ScenarioResult.jsx      # Side-by-side comparison view
+│   ├── pages/
+│   │   ├── RevenueOverview.jsx     # Revenue dashboard page
+│   │   ├── TradeAnalytics.jsx      # Trade analytics page
+│   │   ├── Forecasting.jsx         # Forecasting dashboard
+│   │   ├── Compliance.jsx          # Risk & anomaly page
+│   │   └── Scenarios.jsx           # Policy scenario simulator
+│   ├── hooks/
+│   │   └── useAPI.js               # Custom hook for API calls
+│   ├── utils/
+│   │   └── formatters.js           # Currency, date, number formatting
+│   ├── App.jsx
+│   └── main.jsx
+├── index.html
+├── package.json
+└── vite.config.js
+```
+
+**Design Direction:**
+- Dark mode with glassmorphism cards
+- Vibrant gradient accents (deep blue → teal → emerald)
+- Recharts or Chart.js for interactive charts
+- Framer Motion for page transitions and micro-animations
+- Google Fonts: Inter for body, Outfit for headings
+- Responsive: works on desktop and tablet
+- "SYNTHETIC DATA" watermark badge always visible
+
+**Key Dashboard Pages:**
+
+| Page | Key Visuals |
+|------|-------------|
+| Revenue Overview | KPI cards, monthly trend line, tax-type donut, port bar chart |
+| Trade Analytics | Country treemap, HS code breakdown, time series, top importers |
+| Forecasting | Revenue forecast with confidence bands, model comparison table |
+| Compliance | Risk gauge charts, anomaly table, variance heatmap |
+| Scenarios | Interactive form, before/after comparison, impact summary |
+
+---
+
+### Phase 5 — NLP Chat Interface (Optional/Stretch)
+*Estimated: 2-3 days*
+
+> Let users ask questions in plain English and get data-driven answers.
+
+---
+
+#### [NEW] `core/nlp/query_engine.py`
+
+```python
+class QueryEngine:
+    def parse_question(self, question: str) -> SQLQuery
+    def execute_and_narrate(self, question: str) -> NarratedResponse
+```
+
+#### [NEW] `dashboard/src/components/ChatPanel.jsx`
+
+Slide-out panel with chat interface:
+```
+User: "What was total revenue last quarter?"
+Bot:  "Total revenue for Q4 2025 was $12.4M, up 8.2% from Q3."
+      [Shows mini line chart]
+
+User: "Which country had the biggest trade increase?"  
+Bot:  "Vietnam showed the largest YoY increase at +23%, followed by
+       Indonesia at +18%."
+      [Shows country comparison bar chart]
+```
+
+**New API Endpoint:**
+```
+POST /api/v2/chat/query → Natural language analytics
+```
+
+> [!IMPORTANT]
+> This phase requires an LLM API key (OpenAI, Anthropic, or Google). Need user input on which provider to use, or if this phase should be deferred.
+
+---
+
+## Project Structure (V2 Complete)
+
+```
+bold/
+├── customs-revenue-trade/          # V1 — FROZEN, untouched
+│   └── (all V1 files)
+│
+└── customs-analytics-v2/           # V2 — NEW PROJECT
+    ├── api/
+    │   ├── main.py                 # FastAPI app (connected to DB)
+    │   ├── database.py             # SQLAlchemy engine
+    │   ├── routes/
+    │   │   ├── revenue.py
+    │   │   ├── trade.py
+    │   │   ├── compliance.py
+    │   │   ├── forecast.py         # NEW
+    │   │   ├── scenarios.py        # NEW
+    │   │   ├── chat.py             # NEW (Phase 5)
+    │   │   └── metadata.py
+    │   └── schemas/
+    │
+    ├── core/
+    │   ├── revenue/                # Enhanced calculators
+    │   ├── trade/                  # Enhanced aggregators
+    │   ├── compliance/             # + anomaly_detection.py
+    │   ├── forecasting/            # NEW — ML models
+    │   │   ├── revenue_forecast.py
+    │   │   └── trade_forecast.py
+    │   ├── scenarios/              # NEW — simulation engine
+    │   │   └── simulation_engine.py
+    │   ├── nlp/                    # NEW — chat (Phase 5)
+    │   │   └── query_engine.py
+    │   └── common/
+    │
+    ├── dashboard/                  # NEW — React web app
+    │   ├── src/
+    │   ├── package.json
+    │   └── vite.config.js
+    │
+    ├── database/
+    │   └── schema/                 # Executable SQL files
+    │
+    ├── scripts/
+    │   ├── generate_synthetic_data.py  # V2 (500K, seasonal)
+    │   └── seed_database.py            # Auto-seed on startup
+    │
+    ├── tests/
+    │   ├── test_revenue.py         # Real pytest tests
+    │   ├── test_forecast.py
+    │   ├── test_scenarios.py
+    │   └── test_api.py
+    │
+    ├── docker-compose.yml          # Working containers
+    ├── Dockerfile
+    ├── requirements.txt
+    ├── .env.example
+    └── README.md
+```
+
+---
+
+## Execution Order
+
+| Order | Phase | What Gets Built | Days |
+|-------|-------|-----------------|------|
+| 1 | **Foundation** | Working DB + API + Docker + 500K data | 2-3 |
+| 2 | **Forecasting** | ML models + anomaly detection + full excise | 2-3 |
+| 3 | **Scenarios** | Interactive policy simulation engine | 1-2 |
+| 4 | **Dashboard** | React web app with all visualizations | 3-4 |
+| 5 | **Chat** *(optional)* | NLP query interface | 2-3 |
+| | **Total** | | **10-15 days** |
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+# Run full test suite
+pytest tests/ -v
+
+# Test API endpoints
+pytest tests/test_api.py -v
+
+# Test forecasting models
+pytest tests/test_forecast.py -v
+
+# Test scenario engine
+pytest tests/test_scenarios.py -v
+```
+
+### Manual Verification
+- Spin up `docker-compose up` and verify all services start
+- Hit API docs at `http://localhost:8000/docs` — verify all endpoints
+- Open dashboard at `http://localhost:3000` — verify all pages render
+- Run a forecast and verify the prediction chart renders with confidence bands
+- Run a scenario simulation and verify before/after comparison
+- Browser test: navigate through all 5 dashboard pages
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Please answer these before I start building:**
+>
+> 1. **Which phases to build?** All 5, or a specific subset to start?
+> 2. **Dashboard tech:** Vite + React, or a different preference?
+> 3. **Chat/LLM phase:** Include it, or defer to later?
+> 4. **V2 location:** `customs-analytics-v2/` as sibling to V1 in `bold/`, or somewhere else?
+> 5. **Database:** Use real PostgreSQL via Docker, or SQLite for simpler local development?

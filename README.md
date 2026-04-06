@@ -1,6 +1,19 @@
 # ⚠️ DEMONSTRATION / NON-PRODUCTION SYSTEM
 
+**THIS SYSTEM IS COMPLETE, FROZEN, AND GOVERNED. NO OPERATIONAL USE.**
+
 **THIS IS A DEMONSTRATION SYSTEM FOR ANALYTICS PURPOSES ONLY**
+
+---
+
+## 🎯 PROJECT ROLE: Professional Portfolio
+
+**Primary Purpose:** Technical portfolio demonstration for government IT, data engineering, and policy analytics roles.
+
+This project showcases:
+- **Governance Excellence** - Privacy-by-design, regulatory compliance, audit readiness
+- **Architecture Skills** - Modern tech stack, clean boundaries, modular design
+- **Safety-by-Design** - 100% synthetic data, read-only access, aggregated outputs only
 
 This system is designed and intended for:
 - Proof of concept demonstrations
@@ -116,9 +129,43 @@ For demonstration purposes only. Not for production use.
 
 ---
 
-**Version:** 1.0.0  
-**Status:** Phase 18 Complete - Portfolio Ready  
+**Version:** 1.0-FINAL  
+**Status:** COMPLETE - Project Closed (Version Final 1.0)  
+**Role:** Professional Portfolio  
 **Last Updated:** 2026-04-01
+
+---
+
+## 🚫 What This System Does NOT Do
+
+**This is a critical section.** This system is designed with explicit limitations to ensure trust and safety. Understanding what it cannot do is just as important as understanding what it can do.
+
+| Capability | Status | Explanation |
+|------------|--------|-------------|
+| **Operational Processing** | ❌ NOT CAPABLE | This system cannot process real customs declarations, payments, or trade transactions. All data is synthetic. |
+| **Real Data Ingestion** | ❌ NOT CAPABLE | This system cannot connect to real government databases, customs systems, or operational data sources. |
+| **Enforcement Actions** | ❌ NOT CAPABLE | This system cannot trigger inspections, seizures, penalties, or any enforcement actions. |
+| **Taxpayer Monitoring** | ❌ NOT CAPABLE | This system cannot identify or track individual taxpayers, businesses, or entities. |
+| **Decision Automation** | ❌ NOT CAPABLE | This system cannot make automated decisions, issue rulings, or generate official documents. |
+| **Real Revenue Collection** | ❌ NOT CAPABLE | This system cannot collect, process, or track real tax payments. |
+| **Compliance Verification** | ❌ NOT CAPABLE | This system cannot verify actual compliance with customs regulations. |
+| **Official Reporting** | ❌ NOT CAPABLE | This system cannot generate official statistical reports for government use. |
+
+### Why This Matters
+
+By explicitly stating what the system cannot do, we establish:
+- ✅ **Trust** - Users know the system's boundaries
+- ✅ **Safety** - No risk of misuse for operational decisions
+- ✅ **Compliance** - Clear distinction from production systems
+- ✅ **Professionalism** - Demonstrates responsible system design
+
+### Technical Enforcement
+
+These limitations are not just documented—they are technically enforced:
+- **Data Layer**: 100% synthetic data, no external connections
+- **API Layer**: GET-only, no write capabilities
+- **Database Layer**: SELECT-only permissions
+- **Dashboard Layer**: No drill-down, no export
 
 ---
 
