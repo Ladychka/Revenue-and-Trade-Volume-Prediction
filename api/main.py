@@ -9,14 +9,14 @@ Safe by design:
 - No declaration-level or importer-level data exposed
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 # Import route modules
 from .routes import revenue, trade, compliance, metadata
+from .dependencies import init_db_pool, close_db_pool, is_db_available
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +38,9 @@ app = FastAPI(
     
     **API Freeze Status:** v1.0-demo - ENDPOINT CONTRACTS FROZEN
     No new endpoints can be added without governance approval.
+    
+    **Data Mode:** Connects to PostgreSQL when available; falls back to
+    demonstration data when database is not running.
     """,
     version="1.0.0-demo",
     docs_url="/docs",
@@ -74,13 +77,13 @@ app.include_router(
 @app.middleware("http")
 async def log_api_access(request: Request, call_next):
     """Log all API access events"""
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     
     # Process request
     response = await call_next(request)
     
     # Calculate duration
-    duration = (datetime.utcnow() - start_time).total_seconds()
+    duration = (datetime.now(timezone.utc) - start_time).total_seconds()
     
     # Log access (in production, this would go to a logging service)
     logger.info(
@@ -103,8 +106,10 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0"
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0",
+        "database_connected": is_db_available(),
+        "data_mode": "live" if is_db_available() else "demo"
     }
 
 
@@ -118,7 +123,7 @@ def safe_response(data: dict, message: str = "Success"):
         "success": True,
         "message": message,
         "data": data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -129,7 +134,7 @@ def error_response(message: str, status_code: int = 400):
         content={
             "success": False,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -152,7 +157,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 # ============================================================================
-# Startup Event
+# Startup / Shutdown Events
 # ============================================================================
 
 @app.on_event("startup")
@@ -160,11 +165,17 @@ async def startup_event():
     """Application startup tasks"""
     logger.info("Starting Customs Revenue Analytics API")
     logger.info("API Safety: Read-only, Aggregated data only, All access logged")
+    await init_db_pool()
+    if is_db_available():
+        logger.info("DATA MODE: LIVE — connected to PostgreSQL")
+    else:
+        logger.info("DATA MODE: DEMO — returning demonstration data")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown tasks"""
+    await close_db_pool()
     logger.info("Shutting down Customs Revenue Analytics API")
 
 
@@ -175,7 +186,7 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "main:app",
+        "api.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True

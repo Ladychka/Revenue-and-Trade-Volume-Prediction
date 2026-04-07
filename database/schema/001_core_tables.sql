@@ -62,7 +62,6 @@ CREATE INDEX idx_declaration_date ON declarations(declaration_date);
 CREATE INDEX idx_declaration_status ON declarations(status);
 CREATE INDEX idx_declarant_id ON declarations(declarant_id);
 CREATE INDEX idx_office_code ON declarations(office_code);
-CREATE INDEX idx_origin_country ON declarations(origin_country);
 
 COMMENT ON TABLE declarations IS 'Customs import declarations with synthetic identifiers - NO REAL DATA';
 

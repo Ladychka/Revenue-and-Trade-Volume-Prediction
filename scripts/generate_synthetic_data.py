@@ -5,7 +5,8 @@ Phase 4 - Data Loading
 Generates synthetic declarations, items, and payments
 """
 
-import secrets
+# Note: we use random (not secrets) for synthetic IDs to ensure
+# full reproducibility via random.seed(42)
 import random
 import csv
 from datetime import datetime, timedelta
@@ -22,19 +23,19 @@ DATE_END = datetime(2025, 12, 31)
 def generate_declaration_id(date: datetime) -> str:
     """Generate synthetic declaration ID: DEC-YYYYMMDD-XXXXXXX"""
     date_str = date.strftime("%Y%m%d")
-    seq = secrets.randbelow(9000000) + 1000000
+    seq = random.randint(1000000, 9999999)
     return f"DEC-{date_str}-{seq}"
 
 def generate_importer_id() -> str:
     """Generate synthetic importer ID: IMP-XXXXX-XXXXXXX"""
-    region = secrets.randbelow(90000) + 10000
-    entity = secrets.randbelow(9000000) + 1000000
+    region = random.randint(10000, 99999)
+    entity = random.randint(1000000, 9999999)
     return f"IMP-{region}-{entity}"
 
 def generate_payment_id(date: datetime) -> str:
     """Generate synthetic payment ID: PMT-YYYYMMDD-XXXXXXXX"""
     date_str = date.strftime("%Y%m%d")
-    ref = secrets.randbelow(90000000) + 10000000
+    ref = random.randint(10000000, 99999999)
     return f"PMT-{date_str}-{ref}"
 
 # HS Codes from reference data
@@ -225,8 +226,8 @@ def generate_payments(declarations: List[Dict]) -> List[Dict]:
             'payment_method': random.choice(['WIRE', 'CASH', 'CARD']),
             'currency_code': declaration['currency_code'],
             'exchange_rate': 1.0,
-            'bank_reference': f"BK{secrets.randbelow(999999):06d}",
-            'batch_reference': f"BT{secrets.randbelow(999999):06d}",
+            'bank_reference': f"BK{random.randint(0, 999999):06d}",
+            'batch_reference': f"BT{random.randint(0, 999999):06d}",
             'payment_status': 'COMPLETED' if declaration['status'] == 'CLEARED' else 'PENDING',
         }
         payments.append(payment)

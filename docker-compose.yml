@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: customs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-customs_analytics}
+      POSTGRES_USER: ${DB_USER:-customs_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-customs_demo_2026}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run schema on first start
+      - ./database/schema:/docker-entrypoint-initdb.d/01-schema
+      - ./database/views:/docker-entrypoint-initdb.d/02-views
+      - ./database/materialized_views:/docker-entrypoint-initdb.d/03-materialized-views
+      - ./database/seed:/docker-entrypoint-initdb.d/04-seed
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-customs_user} -d ${DB_NAME:-customs_analytics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Analytics API
+  api:
+    build: .
+    container_name: customs-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-customs_analytics}
+      DB_USER: ${DB_USER:-customs_user}
+      DB_PASSWORD: ${DB_PASSWORD:-customs_demo_2026}
+      API_DEMO_MODE: ${API_DEMO_MODE:-true}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
